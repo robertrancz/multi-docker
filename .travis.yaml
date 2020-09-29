@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t rrobi/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run rrobi/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t rrobi/multi-client ./client
+  - docker build -t rrobi/multi-nginx ./nginx
+  - docker build -t rrobi/multi-server ./server
+  - docker build -t rrobi/multi-worker ./worker
+  # Login to Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push the images to Docker Hub
+  - docker push rrobi/multi-client
+  - docker push rrobi/multi-nginx
+  - docker push rrobi/multi-server
+  - docker push rrobi/multi-worker
